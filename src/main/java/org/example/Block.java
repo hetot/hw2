@@ -11,13 +11,10 @@ import java.util.UUID;
 @EqualsAndHashCode
 @ToString
 public class Block implements Comparable<Block> {
-
     public final String uuid = UUID.randomUUID().toString();
 
     @Override
     public int compareTo(Block o) {
         return uuid.compareTo(o.uuid);
     }
-
-
 }

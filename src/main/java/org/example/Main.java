@@ -41,7 +41,11 @@ public class Main {
 
         Collections.sort(initialBlocks);
 
-        List<Block> deliveredBlocks = new ArrayList<>(retail.getStorage());
+        List<Block> deliveredBlocks = new ArrayList<>();
+
+        while (!retail.getStorage().isEmpty()) {
+            deliveredBlocks.add(retail.getStorage().get());
+        }
 
         Collections.sort(deliveredBlocks);
 
@@ -51,7 +55,5 @@ public class Main {
         } else {
             log.error("Error in delivery");
         }
-
-
     }
 }

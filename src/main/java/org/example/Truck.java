@@ -11,7 +11,6 @@ import java.util.Queue;
 @Log4j2
 @Getter
 public class Truck extends Thread {
-
     private final int capacity;
 
     private final List<Block> blocks;
@@ -19,7 +18,6 @@ public class Truck extends Thread {
     private final Queue<Warehouse> routeList = new LinkedList<>();
 
     private final long travelTime = Math.round(Math.random() * 2000);
-
 
     public Truck(String name, int capacity, List<Warehouse> route) {
         super(name);

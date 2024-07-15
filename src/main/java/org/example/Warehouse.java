@@ -2,6 +2,8 @@ package org.example;
 
 import lombok.Getter;
 import lombok.extern.log4j.Log4j2;
+import org.example.queue.Queue;
+import org.example.queue.NonBlockingQueue;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -10,8 +12,7 @@ import java.util.List;
 @Log4j2
 @Getter
 public class Warehouse extends Thread {
-
-    private final List<Block> storage = new ArrayList<>();
+    private final Queue<Block> storage = new NonBlockingQueue<>();
 
     public Warehouse(String name) {
         super(name);
@@ -19,33 +20,26 @@ public class Warehouse extends Thread {
 
     public Warehouse(String name, Collection<Block> initialStorage) {
         this(name);
-        storage.addAll(initialStorage);
+        initialStorage.forEach(storage::add);
     }
 
     @Override
     public void run() {
-        Truck truck;
-        while (!currentThread().isInterrupted()) {
-            truck = getNextArrivedTruck();
-            if (truck == null) {
-                try {
-                    sleep(100);
-                } catch (InterruptedException e) {
-                    if (currentThread().isInterrupted()) {
-
-                        break;
-                    }
-                }
-                continue;
+        try {
+            while (!Thread.currentThread().isInterrupted()) {
+                sleep(100);
             }
-            if (truck.getBlocks().isEmpty()) {
-                loadTruck(truck);
-            } else {
-                unloadTruck(truck);
-            }
+        } catch (InterruptedException e) {
+            log.info("{} thread interrupted", this.getName());
         }
-        log.info("Warehouse thread interrupted");
+    }
 
+    public void arrive(Truck truck) {
+        if (truck.getBlocks().isEmpty()) {
+            loadTruck(truck);
+        } else {
+            unloadTruck(truck);
+        }
     }
 
     private void loadTruck(Truck truck) {
@@ -61,17 +55,15 @@ public class Warehouse extends Thread {
     }
 
     private Collection<Block> getFreeBlocks(int maxItems) {
-        //TODO необходимо реализовать потокобезопасную логику по получению свободных блоков
-        //TODO 1 блок грузится в 1 грузовик, нельзя клонировать блоки во время загрузки
         List<Block> blocks = new ArrayList<>();
         for (int i = 0; i < maxItems; i++) {
-            blocks.add(new Block());
+            blocks.add(storage.get());
         }
         return blocks;
     }
 
     private void returnBlocksToStorage(List<Block> returnedBlocks) {
-        //TODO реализовать потокобезопасную логику по возврату блоков на склад
+        returnedBlocks.forEach(storage::add);
     }
 
     private void unloadTruck(Truck truck) {
@@ -85,16 +77,5 @@ public class Warehouse extends Thread {
         returnBlocksToStorage(arrivedBlocks);
         truck.getBlocks().clear();
         log.info("Truck unloaded {}", truck.getName());
-    }
-
-    private Truck getNextArrivedTruck() {
-        //TODO необходимо реализовать логику по получению следующего прибывшего грузовика внутри потока склада
-        return null;
-    }
-
-
-    public void arrive(Truck truck) {
-        //TODO необходимо реализовать логику по сообщению потоку склада о том, что грузовик приехал
-        //TODO так же дождаться разгрузки блоков, при возврате из этого метода - грузовик покинет склад
     }
 }
